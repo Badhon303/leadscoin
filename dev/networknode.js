@@ -51,7 +51,9 @@ app.get('/mine', function (req, res) {
 // register a node and broadcast it the network
 app.post('/register-and-broadcast-node', function (req, res) {
     const newNodeUrl = req.body.newNodeUrl;
-    if (leadscoin.networkNodes.indexOf(newNodeUrl) == -1) leadscoin.networkNodes.push(newNodeUrl);
+    if (leadscoin.networkNodes.indexOf(newNodeUrl) == -1) {
+        leadscoin.networkNodes.push(newNodeUrl);
+    };
 
     const regNodesPromises = [];
     leadscoin.networkNodes.forEach(networkNodeUrl => {
@@ -87,7 +89,9 @@ app.post('/register-node', function (req, res) {
     const newNodeUrl = req.body.newNodeUrl;
     const nodeNotAlreadyPresent = leadscoin.networkNodes.indexOf(newNodeUrl) == -1;
     const notCurrentNode = leadscoin.currentNodeUrl !== newNodeUrl;
-    if (nodeNotAlreadyPresent && notCurrentNode) leadscoin.networkNodes.push(newNodeUrl);
+    if (nodeNotAlreadyPresent && notCurrentNode) {
+        leadscoin.networkNodes.push(newNodeUrl);
+    };
     res.json({ note: 'New node registered successfully.' });
 });
 
@@ -98,9 +102,10 @@ app.post('/register-nodes-bulk', function (req, res) {
     allNetworkNodes.forEach(networkNodeUrl => {
         const nodeNotAlreadyPresent = leadscoin.networkNodes.indexOf(networkNodeUrl) == -1;
         const notCurrentNode = leadscoin.currentNodeUrl !== networkNodeUrl;
-        if (nodeNotAlreadyPresent && notCurrentNode) leadscoin.networkNodes.push(networkNodeUrl);
+        if (nodeNotAlreadyPresent && notCurrentNode) {
+            leadscoin.networkNodes.push(networkNodeUrl);
+        };
     });
-
     res.json({ note: 'Bulk registration successful.' });
 });
 
