@@ -182,9 +182,7 @@ app.post('/register-and-broadcast-node', function (req, res) {
 // register a node with the network
 app.post('/register-node', function (req, res) {
     const newNodeUrl = req.body.newNodeUrl;
-    const nodeNotAlreadyPresent = leadscoin.networkNodes.indexOf(newNodeUrl) == -1;
-    const notCurrentNode = leadscoin.currentNodeUrl !== newNodeUrl;
-    if (nodeNotAlreadyPresent && notCurrentNode) {
+    if (leadscoin.networkNodes.indexOf(newNodeUrl) == -1 && leadscoin.currentNodeUrl !== newNodeUrl) {
         leadscoin.networkNodes.push(newNodeUrl);
     };
     res.json({ note: 'New node registered successfully.' });
@@ -195,13 +193,10 @@ app.post('/register-node', function (req, res) {
 app.post('/register-nodes-bulk', function (req, res) {
     const allNetworkNodes = req.body.allNetworkNodes;
     allNetworkNodes.forEach(networkNodeUrl => {
-        const nodeNotAlreadyPresent = leadscoin.networkNodes.indexOf(networkNodeUrl) == -1;
-        const notCurrentNode = leadscoin.currentNodeUrl !== networkNodeUrl;
-        if (nodeNotAlreadyPresent && notCurrentNode) {
+        if (leadscoin.networkNodes.indexOf(networkNodeUrl) == -1 && leadscoin.currentNodeUrl !== networkNodeUrl) {
             leadscoin.networkNodes.push(networkNodeUrl);
         };
     });
-
     res.json({ note: 'Bulk registration successful.' });
 });
 
