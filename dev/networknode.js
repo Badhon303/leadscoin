@@ -30,117 +30,120 @@ app.post('/transaction', function (req, res) {
 });
 
 
-// // broadcast transaction
-// app.post('/transaction/broadcast', function (req, res) {
-//     const newTransaction = leadscoin.createNewTransaction(req.body.amount, req.body.sender, req.body.recipient);
-//     leadscoin.addTransactionToPendingTransactions(newTransaction);
+// broadcast transaction
+app.post('/transaction/broadcast', function (req, res) {
+    const newTransaction = leadscoin.createNewTransaction(req.body.amount, req.body.sender, req.body.recipient);
+    leadscoin.addTransactionToPendingTransactions(newTransaction);
 
-//     const requestPromises = [];
-//     leadscoin.networkNodes.forEach(networkNodeUrl => {
-//         const requestOptions = {
-//             uri: networkNodeUrl + '/transaction',
-//             method: 'POST',
-//             body: newTransaction,
-//             json: true
-//         };
+    const requestPromises = [];
+    leadscoin.networkNodes.forEach(networkNodeUrl => {
+        const requestOptions = {
+            uri: networkNodeUrl + '/transaction',
+            method: 'POST',
+            body: newTransaction,
+            json: true
+        };
 
-//         requestPromises.push(rp(requestOptions));
-//     });
+        requestPromises.push(rp(requestOptions));
+    });
 
-//     Promise.all(requestPromises)
-//         .then(data => {
-//             res.json({ note: 'Transaction created and broadcast successfully.' });
-//         });
-// });
+    Promise.all(requestPromises)
+        .then(data => {
+            res.json({ note: 'Transaction created and broadcast successfully.' });
+        });
+});
 
 
-// mine a block
 // app.get('/mine', function (req, res) {
 //     const lastBlock = leadscoin.getLastBlock();
 //     const previousBlockHash = lastBlock['hash'];
 //     const currentBlockData = {
-//         transactions: leadscoin.pendingTransactions,
-//         index: lastBlock['index'] + 1
+//         transections: leadscoin.pendingTransactions,
+//         index: lastBlock['inex'] + 1
 //     };
 //     const nonce = leadscoin.proofOfWork(previousBlockHash, currentBlockData);
 //     const blockHash = leadscoin.hashBlock(previousBlockHash, currentBlockData, nonce);
+//     leadscoin.createNewTransaction(12.5, "00", nodeAddress);
 //     const newBlock = leadscoin.createNewBlock(nonce, previousBlockHash, blockHash);
 
-//     const requestPromises = [];
-//     leadscoin.networkNodes.forEach(networkNodeUrl => {
-//         const requestOptions = {
-//             uri: networkNodeUrl + '/receive-new-block',
-//             method: 'POST',
-//             body: { newBlock: newBlock },
-//             json: true
-//         };
 
-//         requestPromises.push(rp(requestOptions));
+
+//     res.json({
+//         note: "New Block Mined Successfully",
+//         block: newBlock
 //     });
-
-//     Promise.all(requestPromises)
-//         .then(data => {
-//             const requestOptions = {
-//                 uri: leadscoin.currentNodeUrl + '/transaction/broadcast',
-//                 method: 'POST',
-//                 body: {
-//                     amount: 12.5,
-//                     sender: "00",
-//                     recipient: nodeAddress
-//                 },
-//                 json: true
-//             };
-
-//             return rp(requestOptions);
-//         })
-//         .then(data => {
-//             res.json({
-//                 note: "New block mined & broadcast successfully",
-//                 block: newBlock
-//             });
-//         });
 // });
 
+// mine a block
 app.get('/mine', function (req, res) {
     const lastBlock = leadscoin.getLastBlock();
     const previousBlockHash = lastBlock['hash'];
     const currentBlockData = {
-        transections: leadscoin.pendingTransactions,
-        index: lastBlock['inex'] + 1
+        transactions: leadscoin.pendingTransactions,
+        index: lastBlock['index'] + 1
     };
     const nonce = leadscoin.proofOfWork(previousBlockHash, currentBlockData);
     const blockHash = leadscoin.hashBlock(previousBlockHash, currentBlockData, nonce);
-    leadscoin.createNewTransaction(12.5, "00", nodeAddress);
     const newBlock = leadscoin.createNewBlock(nonce, previousBlockHash, blockHash);
 
-    res.json({
-        note: "New Block Mined Successfully",
-        block: newBlock
+    const requestPromises = [];
+    leadscoin.networkNodes.forEach(networkNodeUrl => {
+        const requestOptions = {
+            uri: networkNodeUrl + '/receive-new-block',
+            method: 'POST',
+            body: { newBlock: newBlock },
+            json: true
+        };
+
+        requestPromises.push(rp(requestOptions));
     });
+
+    Promise.all(requestPromises)
+        .then(data => {
+            const requestOptions = {
+                uri: leadscoin.currentNodeUrl + '/transaction/broadcast',
+                method: 'POST',
+                body: {
+                    amount: 12.5,
+                    sender: "00",
+                    recipient: nodeAddress
+                },
+                json: true
+            };
+
+            return rp(requestOptions);
+        })
+        .then(data => {
+            res.json({
+                note: "New block mined & broadcast successfully",
+                block: newBlock
+            });
+        });
 });
 
 
-// // receive new block
-// app.post('/receive-new-block', function (req, res) {
-//     const newBlock = req.body.newBlock;
-//     const lastBlock = leadscoin.getLastBlock();
-//     const correctHash = lastBlock.hash === newBlock.previousBlockHash;
-//     const correctIndex = lastBlock['index'] + 1 === newBlock['index'];
 
-//     if (correctHash && correctIndex) {
-//         leadscoin.chain.push(newBlock);
-//         leadscoin.pendingTransactions = [];
-//         res.json({
-//             note: 'New block received and accepted.',
-//             newBlock: newBlock
-//         });
-//     } else {
-//         res.json({
-//             note: 'New block rejected.',
-//             newBlock: newBlock
-//         });
-//     }
-// });
+// receive new block
+app.post('/receive-new-block', function (req, res) {
+    const newBlock = req.body.newBlock;
+    const lastBlock = leadscoin.getLastBlock();
+    const correctHash = lastBlock.hash === newBlock.previousBlockHash;
+    const correctIndex = lastBlock['index'] + 1 === newBlock['index'];
+
+    if (correctHash && correctIndex) {
+        leadscoin.chain.push(newBlock);
+        leadscoin.pendingTransactions = [];
+        res.json({
+            note: 'New block received and accepted.',
+            newBlock: newBlock
+        });
+    } else {
+        res.json({
+            note: 'New block rejected.',
+            newBlock: newBlock
+        });
+    }
+});
 
 
 // register a node and broadcast it the network
@@ -201,51 +204,50 @@ app.post('/register-nodes-bulk', function (req, res) {
 });
 
 
-// // consensus
-// app.get('/consensus', function (req, res) {
-//     const requestPromises = [];
-//     leadscoin.networkNodes.forEach(networkNodeUrl => {
-//         const requestOptions = {
-//             uri: networkNodeUrl + '/blockchain',
-//             method: 'GET',
-//             json: true
-//         };
+// consensus
+app.get('/consensus', function (req, res) {
+    const requestPromises = [];
+    leadscoin.networkNodes.forEach(networkNodeUrl => {
+        const requestOptions = {
+            uri: networkNodeUrl + '/blockchain',
+            method: 'GET',
+            json: true
+        };
+        requestPromises.push(rp(requestOptions));
+    });
 
-//         requestPromises.push(rp(requestOptions));
-//     });
+    Promise.all(requestPromises)
+        .then(blockchains => {
+            const currentChainLength = leadscoin.chain.length;
+            let maxChainLength = currentChainLength;
+            let newLongestChain = null;
+            let newPendingTransactions = null;
 
-//     Promise.all(requestPromises)
-//         .then(blockchains => {
-//             const currentChainLength = leadscoin.chain.length;
-//             let maxChainLength = currentChainLength;
-//             let newLongestChain = null;
-//             let newPendingTransactions = null;
-
-//             blockchains.forEach(blockchain => {
-//                 if (blockchain.chain.length > maxChainLength) {
-//                     maxChainLength = blockchain.chain.length;
-//                     newLongestChain = blockchain.chain;
-//                     newPendingTransactions = blockchain.pendingTransactions;
-//                 };
-//             });
+            blockchains.forEach(blockchain => {
+                if (blockchain.chain.length > maxChainLength) {
+                    maxChainLength = blockchain.chain.length;
+                    newLongestChain = blockchain.chain;
+                    newPendingTransactions = blockchain.pendingTransactions;
+                };
+            });
 
 
-//             if (!newLongestChain || (newLongestChain && !leadscoin.chainIsValid(newLongestChain))) {
-//                 res.json({
-//                     note: 'Current chain has not been replaced.',
-//                     chain: leadscoin.chain
-//                 });
-//             }
-//             else {
-//                 leadscoin.chain = newLongestChain;
-//                 leadscoin.pendingTransactions = newPendingTransactions;
-//                 res.json({
-//                     note: 'This chain has been replaced.',
-//                     chain: leadscoin.chain
-//                 });
-//             }
-//         });
-// });
+            if (!newLongestChain || (newLongestChain && !leadscoin.chainIsValid(newLongestChain))) {
+                res.json({
+                    note: 'Current chain has not been replaced.',
+                    chain: leadscoin.chain
+                });
+            }
+            else {
+                leadscoin.chain = newLongestChain;
+                leadscoin.pendingTransactions = newPendingTransactions;
+                res.json({
+                    note: 'This chain has been replaced.',
+                    chain: leadscoin.chain
+                });
+            }
+        });
+});
 
 
 // // get block by blockHash
